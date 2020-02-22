@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -35,6 +36,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     private static final Logger log = LoggerFactory.getLogger(SpringSecurityConfig.class);
 
     private PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
+    // Cors
+    private final List<String> origins = Arrays.asList("*");
+    private final List<String> methods = Arrays.asList("GET", "POST");
+    private final List<String> headers = Arrays.asList("Authorization", "Cache-Control", "Content-Type");
 
 
     @Override
@@ -58,7 +64,23 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(HttpMethod.GET, "/api/**").hasRole(this.role)
                 .and()
-                .csrf().disable()
-                .formLogin().disable();
+                .formLogin().disable()
+                .cors();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        final CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(this.origins);
+        configuration.setAllowedMethods(methods);
+        // setAllowCredentials(true) is important, otherwise:
+        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
+        configuration.setAllowCredentials(true);
+        // setAllowedHeaders is important! Without it, OPTIONS preflight request
+        // will fail with 403 Invalid CORS request
+        configuration.setAllowedHeaders(headers);
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

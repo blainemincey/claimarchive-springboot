@@ -37,7 +37,8 @@ public class RestApplication {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigin1,allowedOrigin2);
+                .allowedOrigins(allowedOrigin1,allowedOrigin2)
+                .allowedMethods("GET", "POST");
             }
         };
     }
